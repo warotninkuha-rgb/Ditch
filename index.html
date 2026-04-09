@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>โปรแกรมคำนวณระยะรางระบายน้ำ</title>
+    <!-- ใช้ Tailwind CSS สำหรับความสวยงาม -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* ซ่อนลูกศรใน input type="number" */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans text-slate-800">
+
+    <div class="max-w-xl w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100">
+        
+        <!-- Header Section -->
+        <div class="bg-blue-600 p-6 text-white text-center">
+            <div class="flex justify-center mb-3 text-blue-100">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/>
+                </svg>
+            </div>
+            <h1 class="text-2xl font-bold mb-2">โปรแกรมคำนวณระยะรางระบายน้ำ</h1>
+            <p class="text-blue-100 text-sm">
+                คำนวณระยะทางสูงสุดก่อนที่จะต้องใส่บ่อพัก (Manhole)
+            </p>
+        </div>
+
+        <div class="p-6 sm:p-8">
+            <!-- Input Section -->
+            <div class="space-y-6">
+                
+                <!-- Start Depth Input -->
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">
+                        ความลึกเริ่มต้นของท้องราง (เมตร)
+                    </label>
+                    <input
+                        type="number"
+                        id="startDepth"
+                        min="0"
+                        step="0.01"
+                        value="0.40"
+                        class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-slate-50"
+                        placeholder="เช่น 0.40"
+                    />
+                    <p class="text-slate-500 text-xs mt-2">
+                        * หมายเหตุ: อ้างอิงตามแบบมาตรฐาน ควรมีความลึกเริ่มต้นไม่น้อยกว่า 0.40 เมตร (รวมระยะขอบรางแล้ว)
+                    </p>
+                    <p id="warnStartDepth" class="text-amber-600 text-sm mt-2 flex items-center hidden">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1 flex-shrink-0"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+                        คำเตือน: ความลึกเริ่มต้นน้อยกว่าแบบมาตรฐานกำหนด (MIN 0.40 ม.)
+                    </p>
+                </div>
+
+                <!-- Max Depth Input -->
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">
+                        ความลึกมากสุดของท้องรางที่ยอมให้ (เมตร)
+                    </label>
+                    <input
+                        type="number"
+                        id="maxDepth"
+                        min="0"
+                        step="0.01"
+                        value="0.75"
+                        class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-slate-50"
+                        placeholder="เช่น 0.75"
+                    />
+                    <p class="text-slate-500 text-xs mt-2">
+                        * หมายเหตุ: ไม่ควรเกิน 0.75 เมตร เนื่องจากเป็นระยะลึกสุดที่สามารถรับแรงดันดินด้านข้างได้ของรางระบาย ของ กฟภ.
+                    </p>
+                    <p id="warnMaxDepth" class="text-amber-600 text-sm mt-2 flex items-center hidden">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1 flex-shrink-0"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+                        คำเตือน: ความลึกเกิน 0.75 ม. โครงสร้างอาจไม่สามารถรับแรงดันดินด้านข้างได้
+                    </p>
+                    <p id="warnInvalid" class="text-red-500 text-sm mt-2 flex items-center hidden">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1 flex-shrink-0"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+                        ความลึกสูงสุดต้องมากกว่าความลึกเริ่มต้น
+                    </p>
+                </div>
+
+                <!-- Slope Input -->
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">
+                        ความลาดเอียง (Slope)
+                    </label>
+                    <select
+                        id="slope"
+                        class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-slate-50"
+                    >
+                        <option value="200" selected>1:200 (ลาดเอียง 0.5%)</option>
+                        <option value="400">1:400 (ลาดเอียง 0.25%)</option>
+                    </select>
+                    
+                    <!-- คำแนะนำการใช้ Slope -->
+                    <div class="bg-slate-100 p-3 rounded-md mt-3 text-xs text-slate-600 border border-slate-200">
+                        <p class="font-semibold text-slate-700 mb-1">💡 คำแนะนำการเลือก Slope:</p>
+                        <ul class="list-disc pl-4 space-y-1">
+                            <li>
+                                <strong class="text-slate-700">1:200:</strong> แนะนำให้ใช้เป็นค่ามาตรฐาน 
+                                (ความเร็วน้ำพอเหมาะ ช่วยพัดพาฝุ่นดิน ลดปัญหาการอุดตัน)
+                            </li>
+                            <li>
+                                <strong class="text-slate-700">1:400:</strong> ใช้เมื่อมีข้อจำกัด 
+                                เช่น พื้นที่หน้างานถูกบังคับห้ามเพิ่มบ่อพัก (ยอมรับความเสี่ยงเรื่องท่อตันและต้องลอกท่อบ่อยขึ้น)
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="my-8 border-slate-200" />
+
+            <!-- Result Section -->
+            <div class="bg-blue-50 rounded-xl p-6 border border-blue-100 relative overflow-hidden">
+                <div class="absolute top-0 right-0 -mt-4 -mr-4 text-blue-100 opacity-50 pointer-events-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                </div>
+                
+                <h2 class="text-sm font-semibold text-blue-800 mb-2 relative z-10">
+                    ระยะสูงสุดก่อนต้องมีบ่อพักคือ:
+                </h2>
+                <div class="flex items-end relative z-10">
+                    <span id="resultLength" class="text-5xl font-bold text-blue-600 mr-2">
+                        70
+                    </span>
+                    <span class="text-xl font-medium text-blue-800 mb-1">เมตร</span>
+                </div>
+            </div>
+
+            <!-- Info Section -->
+            <div class="mt-6 bg-slate-50 rounded-lg p-4 text-sm text-slate-600 flex items-start border border-slate-200">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400 mr-2 mt-0.5 flex-shrink-0"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="16" y2="12"/><line x1="12" x2="12.01" y1="8" y2="8"/></svg>
+                <div>
+                    <strong>สูตรการคำนวณ:</strong> <br />
+                    <code class="text-xs bg-slate-200 px-1 py-0.5 rounded mt-1 inline-block">
+                        ระยะทาง = (ความลึกมากสุด - ความลึกเริ่มต้น) × (ตัวหารของ Slope)
+                    </code>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Script สำหรับคำนวณผลลัพธ์ -->
+    <script>
+        // ดึง Element จาก DOM
+        const elStartDepth = document.getElementById('startDepth');
+        const elMaxDepth = document.getElementById('maxDepth');
+        const elSlope = document.getElementById('slope');
+        const elResult = document.getElementById('resultLength');
+        
+        // ดึง Element การแจ้งเตือน
+        const warnStartDepth = document.getElementById('warnStartDepth');
+        const warnMaxDepth = document.getElementById('warnMaxDepth');
+        const warnInvalid = document.getElementById('warnInvalid');
+
+        // ฟังก์ชันคำนวณและอัปเดตหน้าจอ
+        function calculate() {
+            // อ่านค่าจาก Input
+            const startDepth = parseFloat(elStartDepth.value) || 0;
+            const maxDepth = parseFloat(elMaxDepth.value) || 0;
+            const slope = parseInt(elSlope.value) || 200;
+
+            // --- จัดการการแสดงผลแจ้งเตือน ---
+            
+            // เตือนความลึกเริ่มต้นน้อยกว่า 0.40
+            if (startDepth < 0.40 && startDepth > 0) {
+                warnStartDepth.classList.remove('hidden');
+            } else {
+                warnStartDepth.classList.add('hidden');
+            }
+
+            // เตือนความลึกสูงสุดเกิน 0.75
+            if (maxDepth > 0.75) {
+                warnMaxDepth.classList.remove('hidden');
+            } else {
+                warnMaxDepth.classList.add('hidden');
+            }
+
+            // เตือนความลึกสูงสุด น้อยกว่าหรือเท่ากับ ความลึกเริ่มต้น
+            if (maxDepth <= startDepth && maxDepth > 0) {
+                warnInvalid.classList.remove('hidden');
+            } else {
+                warnInvalid.classList.add('hidden');
+            }
+
+            // --- คำนวณผลลัพธ์ ---
+            let maxLength = 0;
+            if (maxDepth > startDepth) {
+                maxLength = (maxDepth - startDepth) * slope;
+            }
+
+            // แสดงผล (Format ตัวเลขให้มีคอมม่าและทศนิยม 2 ตำแหน่งถ้ามีเศษ)
+            elResult.textContent = maxLength > 0 
+                ? maxLength.toLocaleString('th-TH', { maximumFractionDigits: 2 }) 
+                : "0";
+        }
+
+        // ผูก Event Listener เมื่อมีการพิมพ์หรือเปลี่ยนค่า
+        elStartDepth.addEventListener('input', calculate);
+        elMaxDepth.addEventListener('input', calculate);
+        elSlope.addEventListener('change', calculate);
+
+        // เรียกคำนวณครั้งแรกเมื่อโหลดหน้าเว็บ
+        calculate();
+    </script>
+</body>
+</html>
